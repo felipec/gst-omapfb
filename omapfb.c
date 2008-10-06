@@ -132,6 +132,8 @@ setcaps (GstBaseSink *bsink,
     if (ioctl (self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info))
         return FALSE;
 
+    self->enabled = TRUE;
+
     return TRUE;
 }
 
@@ -184,6 +186,14 @@ stop (GstBaseSink *bsink)
     GstOmapFbSink *self;
 
     self = GST_OMAPFB_SINK (bsink);
+
+    if (self->enabled)
+    {
+        self->plane_info.enabled = 0;
+
+        if (ioctl (self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info))
+            return FALSE;
+    }
 
     if (munmap (self->framebuffer, self->mem_info.size))
         return FALSE;
