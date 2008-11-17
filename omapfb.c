@@ -279,7 +279,7 @@ plugin_init (GstPlugin *plugin)
     return TRUE;
 }
 
-GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc =
+GstPluginDesc gst_plugin_desc =
 {
     GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
