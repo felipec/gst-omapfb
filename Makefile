@@ -8,6 +8,8 @@ CFLAGS := -Wall -ggdb -ansi -std=c99
 plugin := libgstomapfb.so
 objects := omapfb.o
 
+plugin_dir := $(DESTDIR)/usr/lib/gstreamer-0.10
+
 all: $(plugin)
 
 $(plugin): $(objects)
@@ -30,6 +32,9 @@ endif
 %.so::
 	$(P)SHLIB
 	$(Q)$(CC) $(LDFLAGS) -shared -o $@ $^ $(LIBS)
+
+install: $(plugin)
+	$(Q)install $(plugin) $(plugin_dir)
 
 clean:
 	$(Q)rm -f $(plugin) $(objects)
