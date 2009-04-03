@@ -132,8 +132,8 @@ setcaps (GstBaseSink *bsink,
     self->plane_info.enabled = 1;
     self->plane_info.pos_x = 0;
     self->plane_info.pos_y = 0;
-    self->plane_info.out_width = self->overlay_info.xres;
-    self->plane_info.out_height = self->overlay_info.yres;
+    self->plane_info.out_width = self->varinfo.xres;
+    self->plane_info.out_height = self->varinfo.yres;
 
     if (ioctl (self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info))
     {
