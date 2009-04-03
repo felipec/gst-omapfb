@@ -23,7 +23,7 @@
 
 #include "omapfb.h"
 
-static GstVideoSinkClass *parent_class = NULL;
+static GstVideoSinkClass *parent_class;
 
 static GstCaps *
 generate_sink_template (void)
