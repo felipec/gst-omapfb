@@ -123,6 +123,9 @@ setcaps (GstBaseSink *bsink,
     self->overlay_info.yoffset = 0;
     self->overlay_info.nonstd = OMAPFB_COLOR_YUV422;
 
+    GST_INFO_OBJECT (self, "vscreen info: width=%u, height=%u",
+                     self->overlay_info.xres, self->overlay_info.yres);
+
     if (ioctl (self->overlay_fd, FBIOPUT_VSCREENINFO, &self->overlay_info))
     {
         GST_ERROR_OBJECT (self, "could not get screen info");
@@ -134,6 +137,9 @@ setcaps (GstBaseSink *bsink,
     self->plane_info.pos_y = 0;
     self->plane_info.out_width = self->varinfo.xres;
     self->plane_info.out_height = self->varinfo.yres;
+
+    GST_INFO_OBJECT (self, "plane info: width=%u, height=%u",
+                     self->varinfo.xres, self->varinfo.yres);
 
     if (ioctl (self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info))
     {
