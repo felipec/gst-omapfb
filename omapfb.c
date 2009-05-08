@@ -20,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "omapfb.h"
 
@@ -250,6 +251,28 @@ stop (GstBaseSink *bsink)
     return TRUE;
 }
 
+static GstFlowReturn
+render (GstBaseSink *bsink, GstBuffer *buffer)
+{
+    GstOmapFbSink *self;
+    self = GST_OMAPFB_SINK (bsink);
+
+    if (GST_BUFFER_DATA (buffer) == self->framebuffer)
+    {
+        return GST_FLOW_OK;
+    }
+    else
+    {
+        /* memcpy needed */
+        if (memcpy (self->framebuffer, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer)))
+        {
+            return GST_FLOW_OK;
+        }
+    }
+
+    return GST_FLOW_ERROR;
+}
+
 static void
 type_class_init (gpointer g_class,
                  gpointer class_data)
@@ -264,6 +287,7 @@ type_class_init (gpointer g_class,
     base_sink_class->buffer_alloc = GST_DEBUG_FUNCPTR (buffer_alloc);
     base_sink_class->start = GST_DEBUG_FUNCPTR (start);
     base_sink_class->stop = GST_DEBUG_FUNCPTR (stop);
+    base_sink_class->render = GST_DEBUG_FUNCPTR (render);
 }
 
 static void
