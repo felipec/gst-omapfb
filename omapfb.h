@@ -36,21 +36,21 @@ typedef struct GstOmapFbSinkClass GstOmapFbSinkClass;
 
 struct GstOmapFbSink
 {
-    GstVideoSink videosink;
+	GstVideoSink videosink;
 
-    struct fb_var_screeninfo varinfo;
-    struct fb_var_screeninfo overlay_info;
-    struct omapfb_mem_info mem_info;
-    struct omapfb_plane_info plane_info;
+	struct fb_var_screeninfo varinfo;
+	struct fb_var_screeninfo overlay_info;
+	struct omapfb_mem_info mem_info;
+	struct omapfb_plane_info plane_info;
 
-    int overlay_fd;
-    unsigned char *framebuffer;
-    gboolean enabled;
+	int overlay_fd;
+	unsigned char *framebuffer;
+	gboolean enabled;
 };
 
 struct GstOmapFbSinkClass
 {
-    GstBaseSinkClass parent_class;
+	GstBaseSinkClass parent_class;
 };
 
 GType gst_omapfbsink_get_type (void);
