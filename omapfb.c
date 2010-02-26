@@ -90,6 +90,11 @@ buffer_alloc(GstBaseSink *bsink,
 
 	self = GST_OMAPFB_SINK(bsink);
 
+	if (!self->enabled) {
+		*buf = NULL;
+		return GST_FLOW_OK;
+	}
+
 	buffer = gst_buffer_new();
 	GST_BUFFER_DATA(buffer) = self->framebuffer;
 	GST_BUFFER_SIZE(buffer) = size;
