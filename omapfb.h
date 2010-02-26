@@ -36,6 +36,11 @@ G_BEGIN_DECLS
 typedef struct GstOmapFbSink GstOmapFbSink;
 typedef struct GstOmapFbSinkClass GstOmapFbSinkClass;
 
+struct page {
+	unsigned yoffset;
+	void *buf;
+};
+
 struct GstOmapFbSink {
 	GstVideoSink videosink;
 
@@ -48,6 +53,10 @@ struct GstOmapFbSink {
 	unsigned char *framebuffer;
 	bool enabled;
 	bool manual_update;
+
+	struct page *pages;
+	int nr_pages;
+	struct page *cur_page;
 };
 
 struct GstOmapFbSinkClass {
