@@ -106,7 +106,7 @@ setcaps(GstBaseSink *bsink,
 {
 	GstOmapFbSink *self;
 	GstStructure *structure;
-	gint width, height;
+	int width, height;
 
 	self = GST_OMAPFB_SINK(bsink);
 
@@ -115,8 +115,8 @@ setcaps(GstBaseSink *bsink,
 	gst_structure_get_int(structure, "width", &width);
 	gst_structure_get_int(structure, "height", &height);
 
-	self->overlay_info.xres = MIN(self->varinfo.xres, width) & ~15;
-	self->overlay_info.yres = MIN(self->varinfo.yres, height) & ~15;
+	self->overlay_info.xres = MIN(self->varinfo.xres, (unsigned) width) & ~15;
+	self->overlay_info.yres = MIN(self->varinfo.yres, (unsigned) height) & ~15;
 	self->overlay_info.xres_virtual = self->overlay_info.xres;
 	self->overlay_info.yres_virtual = self->overlay_info.yres;
 
