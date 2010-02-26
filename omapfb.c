@@ -27,8 +27,7 @@
 
 static GstVideoSinkClass *parent_class;
 
-GST_DEBUG_CATEGORY(omapfb_debug);
-#define GST_CAT_DEFAULT omapfb_debug
+GstDebugCategory *omapfb_debug;
 
 static GstCaps *
 generate_sink_template(void)
@@ -317,7 +316,9 @@ gst_omapfbsink_get_type(void)
 static gboolean
 plugin_init(GstPlugin *plugin)
 {
-	GST_DEBUG_CATEGORY_INIT(omapfb_debug, "omapfb", 0, "omapfb");
+#ifndef GST_DISABLE_GST_DEBUG
+	omapfb_debug = _gst_debug_category_new("omapfb", 0, "omapfb");
+#endif
 
 	if (!gst_element_register(plugin, "omapfbsink", GST_RANK_NONE, GST_OMAPFB_SINK_TYPE))
 		return FALSE;
