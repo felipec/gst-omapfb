@@ -120,6 +120,20 @@ setcaps(GstBaseSink *bsink,
 	gst_structure_get_int(structure, "width", &width);
 	gst_structure_get_int(structure, "height", &height);
 
+	self->mem_info.type = OMAPFB_MEMTYPE_SDRAM;
+	self->mem_info.size = GST_ROUND_UP_2(width) * height * 2;
+
+	if (ioctl(self->overlay_fd, OMAPFB_SETUP_MEM, &self->mem_info)) {
+		pr_err(self, "could not setup memory info");
+		return FALSE;
+	}
+
+	self->framebuffer = mmap(NULL, self->mem_info.size, PROT_WRITE, MAP_SHARED, self->overlay_fd, 0);
+	if (self->framebuffer == MAP_FAILED) {
+		pr_err(self, "memory map failed");
+		return FALSE;
+	}
+
 	self->overlay_info.xres = MIN(self->varinfo.xres, (unsigned) width) & ~15;
 	self->overlay_info.yres = MIN(self->varinfo.yres, (unsigned) height) & ~15;
 	self->overlay_info.xres_virtual = self->overlay_info.xres;
@@ -196,17 +210,6 @@ start(GstBaseSink *bsink)
 
 	if (ioctl(self->overlay_fd, OMAPFB_QUERY_PLANE, &self->plane_info)) {
 		pr_err(self, "could not query plane info");
-		return FALSE;
-	}
-
-	if (ioctl(self->overlay_fd, OMAPFB_QUERY_MEM, &self->mem_info)) {
-		pr_err(self, "could not query memory info");
-		return FALSE;
-	}
-
-	self->framebuffer = mmap(NULL, self->mem_info.size, PROT_WRITE, MAP_SHARED, self->overlay_fd, 0);
-	if (self->framebuffer == MAP_FAILED) {
-		pr_err(self, "memory map failed");
 		return FALSE;
 	}
 
