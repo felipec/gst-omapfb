@@ -1,25 +1,35 @@
-CC := arm-linux-gcc
-CFLAGS := -O2 -Wall -Werror -ansi -std=c99
+CROSS_COMPILE ?= arm-linux-
+CC := $(CROSS_COMPILE)gcc
 
-GST_LIBS := $(shell pkg-config --libs gstreamer-0.10 gstreamer-base-0.10)
+CFLAGS := -O2 -ggdb -Wall -Wextra -Wno-unused-parameter -ansi -std=c99
+LDFLAGS := -Wl,--no-undefined
+
 GST_CFLAGS := $(shell pkg-config --cflags gstreamer-0.10 gstreamer-base-0.10)
+GST_LIBS := $(shell pkg-config --libs gstreamer-0.10 gstreamer-base-0.10)
+
 KERNEL := /data/public/dev/omap/linux-omap
 
-plugin_dir := $(DESTDIR)/usr/lib/gstreamer-0.10
+prefix := /usr
 
-all: libgstomapfb.so
+all:
 
 libgstomapfb.so: omapfb.o
-libgstomapfb.so: CFLAGS := $(CFLAGS) $(GST_CFLAGS) -I$(KERNEL)/arch/arm/plat-omap/include
-libgstomapfb.so: LIBS := $(GST_LIBS)
+libgstomapfb.so: override CFLAGS += $(GST_CFLAGS) \
+	-I$(KERNEL)/arch/arm/plat-omap/include
+libgstomapfb.so: override LIBS += $(GST_LIBS)
+
+targets += libgstomapfb.so
+
+all: $(targets)
 
 # pretty print
-V = @
-Q = $(V:y=)
-QUIET_CC      = $(Q:@=@echo ' CC         '$@;)
-QUIET_LINK    = $(Q:@=@echo ' LINK       '$@;)
-QUIET_CLEAN   = $(Q:@=@echo ' CLEAN      '$@;)
-QUIET_INSTALL = $(Q:@=@echo ' INSTALL    '$@;)
+ifndef V
+QUIET_CC    = @echo '   CC         '$@;
+QUIET_LINK  = @echo '   LINK       '$@;
+QUIET_CLEAN = @echo '   CLEAN      '$@;
+endif
+
+D = $(DESTDIR)
 
 %.o:: %.c
 	$(QUIET_CC)$(CC) $(CFLAGS) -MMD -o $@ -c $<
@@ -27,10 +37,10 @@ QUIET_INSTALL = $(Q:@=@echo ' INSTALL    '$@;)
 %.so::
 	$(QUIET_CC)$(CC) $(LDFLAGS) -shared -o $@ $^ $(LIBS)
 
-install: libgstomapfb.so
-	$(QUIET_INSTALL)install libgstomapfb.so $(plugin_dir)
+install: $(targets)
+	install -D libgstomapfb.so $(D)/$(prefix)/lib/gstreamer-0.10/libgstomapfb.so
 
 clean:
-	$(QUIET_CLEAN)$(RM) libgstomapfb.so *.o *.d
+	$(QUIET_CLEAN)$(RM) $(targets) *.o *.d
 
 -include *.d
