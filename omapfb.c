@@ -240,7 +240,7 @@ start(GstBaseSink *bsink)
 	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
 	int fd;
 
-	self->nr_pages = 1;
+	self->nr_pages = 2;
 	self->cur_page = NULL;
 
 	fd = open("/dev/fb0", O_RDWR);
