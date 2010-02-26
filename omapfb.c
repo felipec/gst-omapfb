@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "omapfb.h"
+#include "log.h"
 
 static GstVideoSinkClass *parent_class;
 
@@ -124,11 +125,11 @@ setcaps(GstBaseSink *bsink,
 	self->overlay_info.yoffset = 0;
 	self->overlay_info.nonstd = OMAPFB_COLOR_YUV422;
 
-	GST_INFO_OBJECT(self, "vscreen info: width=%u, height=%u",
-			self->overlay_info.xres, self->overlay_info.yres);
+	pr_info(self, "vscreen info: width=%u, height=%u",
+		self->overlay_info.xres, self->overlay_info.yres);
 
 	if (ioctl(self->overlay_fd, FBIOPUT_VSCREENINFO, &self->overlay_info)) {
-		GST_ERROR_OBJECT(self, "could not get screen info");
+		pr_err(self, "could not get screen info");
 		return FALSE;
 	}
 
@@ -138,11 +139,11 @@ setcaps(GstBaseSink *bsink,
 	self->plane_info.out_width = self->varinfo.xres;
 	self->plane_info.out_height = self->varinfo.yres;
 
-	GST_INFO_OBJECT(self, "plane info: width=%u, height=%u",
-			self->varinfo.xres, self->varinfo.yres);
+	pr_info(self, "plane info: width=%u, height=%u",
+		self->varinfo.xres, self->varinfo.yres);
 
 	if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
-		GST_ERROR_OBJECT(self, "could not setup plane");
+		pr_err(self, "could not setup plane");
 		return FALSE;
 	}
 
@@ -162,46 +163,46 @@ start(GstBaseSink *bsink)
 	fd = open("/dev/fb0", O_RDWR);
 
 	if (fd == -1) {
-		GST_ERROR_OBJECT(self, "could not open framebuffer");
+		pr_err(self, "could not open framebuffer");
 		return FALSE;
 	}
 
 	if (ioctl(fd, FBIOGET_VSCREENINFO, &self->varinfo)) {
-		GST_ERROR_OBJECT(self, "could not get screen info");
+		pr_err(self, "could not get screen info");
 		close(fd);
 		return FALSE;
 	}
 
 	if (close(fd)) {
-		GST_ERROR_OBJECT(self, "could not close framebuffer");
+		pr_err(self, "could not close framebuffer");
 		return FALSE;
 	}
 
 	self->overlay_fd = open("/dev/fb1", O_RDWR);
 
 	if (self->overlay_fd == -1) {
-		GST_ERROR_OBJECT(self, "could not open overlay");
+		pr_err(self, "could not open overlay");
 		return FALSE;
 	}
 
 	if (ioctl(self->overlay_fd, FBIOGET_VSCREENINFO, &self->overlay_info)) {
-		GST_ERROR_OBJECT(self, "could not get overlay screen info");
+		pr_err(self, "could not get overlay screen info");
 		return FALSE;
 	}
 
 	if (ioctl(self->overlay_fd, OMAPFB_QUERY_PLANE, &self->plane_info)) {
-		GST_ERROR_OBJECT(self, "could not query plane info");
+		pr_err(self, "could not query plane info");
 		return FALSE;
 	}
 
 	if (ioctl(self->overlay_fd, OMAPFB_QUERY_MEM, &self->mem_info)) {
-		GST_ERROR_OBJECT(self, "could not query memory info");
+		pr_err(self, "could not query memory info");
 		return FALSE;
 	}
 
 	self->framebuffer = mmap(NULL, self->mem_info.size, PROT_WRITE, MAP_SHARED, self->overlay_fd, 0);
 	if (self->framebuffer == MAP_FAILED) {
-		GST_ERROR_OBJECT(self, "memory map failed");
+		pr_err(self, "memory map failed");
 		return FALSE;
 	}
 
@@ -219,18 +220,18 @@ stop(GstBaseSink *bsink)
 		self->plane_info.enabled = 0;
 
 		if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
-			GST_ERROR_OBJECT(self, "could not disable plane");
+			pr_err(self, "could not disable plane");
 			return FALSE;
 		}
 	}
 
 	if (munmap(self->framebuffer, self->mem_info.size)) {
-		GST_ERROR_OBJECT(self, "could not unmap");
+		pr_err(self, "could not unmap");
 		return FALSE;
 	}
 
 	if (close(self->overlay_fd)) {
-		GST_ERROR_OBJECT(self, "could not close overlay");
+		pr_err(self, "could not close overlay");
 		return FALSE;
 	}
 

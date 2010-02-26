@@ -4,6 +4,8 @@ CC := $(CROSS_COMPILE)gcc
 CFLAGS := -O2 -ggdb -Wall -Wextra -Wno-unused-parameter -ansi -std=c99
 LDFLAGS := -Wl,--no-undefined
 
+override CFLAGS += -D_GNU_SOURCE
+
 GST_CFLAGS := $(shell pkg-config --cflags gstreamer-0.10 gstreamer-base-0.10)
 GST_LIBS := $(shell pkg-config --libs gstreamer-0.10 gstreamer-base-0.10)
 
@@ -13,7 +15,7 @@ prefix := /usr
 
 all:
 
-libgstomapfb.so: omapfb.o
+libgstomapfb.so: omapfb.o log.o
 libgstomapfb.so: override CFLAGS += $(GST_CFLAGS) \
 	-I$(KERNEL)/arch/arm/plat-omap/include
 libgstomapfb.so: override LIBS += $(GST_LIBS)
