@@ -15,8 +15,11 @@ prefix := /usr
 
 all:
 
+version := $(shell ./get-version)
+
 libgstomapfb.so: omapfb.o log.o
 libgstomapfb.so: override CFLAGS += $(GST_CFLAGS) \
+	-D VERSION='"$(version)"' \
 	-I$(KERNEL)/arch/arm/plat-omap/include
 libgstomapfb.so: override LIBS += $(GST_LIBS)
 
