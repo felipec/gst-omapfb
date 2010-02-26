@@ -110,6 +110,7 @@ buffer_alloc(GstBaseSink *bsink,
 	GstOmapFbSink *self;
 	GstBuffer *buffer;
 	GstFlowReturn ret = GST_FLOW_OK;
+	struct page *page;
 
 	self = GST_OMAPFB_SINK(bsink);
 
@@ -118,8 +119,11 @@ buffer_alloc(GstBaseSink *bsink,
 		return GST_FLOW_OK;
 	}
 
+	page = &self->pages[self->cur_page];
+	self->cur_page = (self->cur_page + 1) % self->nr_pages;
+
 	buffer = gst_buffer_new();
-	GST_BUFFER_DATA(buffer) = self->framebuffer;
+	GST_BUFFER_DATA(buffer) = page->buf;
 	GST_BUFFER_SIZE(buffer) = size;
 	gst_buffer_set_caps(buffer, caps);
 
@@ -136,6 +140,7 @@ setcaps(GstBaseSink *bsink,
 	GstStructure *structure;
 	int width, height;
 	int update_mode;
+	size_t framesize;
 
 	self = GST_OMAPFB_SINK(bsink);
 
@@ -144,8 +149,10 @@ setcaps(GstBaseSink *bsink,
 	gst_structure_get_int(structure, "width", &width);
 	gst_structure_get_int(structure, "height", &height);
 
+	framesize = GST_ROUND_UP_2(width) * height * 2;
+
 	self->mem_info.type = OMAPFB_MEMTYPE_SDRAM;
-	self->mem_info.size = GST_ROUND_UP_2(width) * height * 2;
+	self->mem_info.size = framesize * self->nr_pages;
 
 	if (ioctl(self->overlay_fd, OMAPFB_SETUP_MEM, &self->mem_info)) {
 		pr_err(self, "could not setup memory info");
@@ -161,7 +168,7 @@ setcaps(GstBaseSink *bsink,
 	self->overlay_info.xres = width;
 	self->overlay_info.yres = height;
 	self->overlay_info.xres_virtual = self->overlay_info.xres;
-	self->overlay_info.yres_virtual = self->overlay_info.yres;
+	self->overlay_info.yres_virtual = self->overlay_info.yres * self->nr_pages;
 
 	self->overlay_info.xoffset = 0;
 	self->overlay_info.yoffset = 0;
@@ -195,6 +202,14 @@ setcaps(GstBaseSink *bsink,
 	ioctl(self->overlay_fd, OMAPFB_SET_UPDATE_MODE, &update_mode);
 	self->manual_update = (update_mode == OMAPFB_MANUAL_UPDATE);
 
+	self->pages = calloc(self->nr_pages, sizeof(*self->pages));
+
+	int i;
+	for (i = 0; i < self->nr_pages; i++) {
+		self->pages[i].yoffset = i * self->overlay_info.yres;
+		self->pages[i].buf = self->framebuffer + (i * framesize);
+	}
+
 	return true;
 }
 
@@ -205,6 +220,8 @@ start(GstBaseSink *bsink)
 	int fd;
 
 	self = GST_OMAPFB_SINK(bsink);
+
+	self->nr_pages = 1;
 
 	fd = open("/dev/fb0", O_RDWR);
 
@@ -277,12 +294,17 @@ render(GstBaseSink *bsink,
        GstBuffer *buffer)
 {
 	GstOmapFbSink *self;
+	struct page *page;
+
 	self = GST_OMAPFB_SINK(bsink);
+	page = &self->pages[self->cur_page];
 
-	if (GST_BUFFER_DATA(buffer) == self->framebuffer)
-		return GST_FLOW_OK;
-
-	memcpy(self->framebuffer, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
+	if (page->buf == GST_BUFFER_DATA(buffer)) {
+		self->overlay_info.yoffset = page->yoffset;
+		ioctl(self->overlay_fd, FBIOPAN_DISPLAY, &self->overlay_info);
+	} else {
+		memcpy(page->buf, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
+	}
 
 	if (self->manual_update)
 		update(self);
