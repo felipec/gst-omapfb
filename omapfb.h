@@ -28,14 +28,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_OMAPFB_SINK_TYPE (gst_omapfbsink_get_type ())
-#define GST_OMAPFB_SINK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_OMAPFB_SINK_TYPE, GstOmapFbSink))
+#define GST_OMAPFB_SINK_TYPE (gst_omapfbsink_get_type())
+#define GST_OMAPFB_SINK(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_OMAPFB_SINK_TYPE, GstOmapFbSink))
 
 typedef struct GstOmapFbSink GstOmapFbSink;
 typedef struct GstOmapFbSinkClass GstOmapFbSinkClass;
 
-struct GstOmapFbSink
-{
+struct GstOmapFbSink {
 	GstVideoSink videosink;
 
 	struct fb_var_screeninfo varinfo;
@@ -48,12 +47,11 @@ struct GstOmapFbSink
 	gboolean enabled;
 };
 
-struct GstOmapFbSinkClass
-{
+struct GstOmapFbSinkClass {
 	GstBaseSinkClass parent_class;
 };
 
-GType gst_omapfbsink_get_type (void);
+GType gst_omapfbsink_get_type(void);
 
 G_END_DECLS
 
