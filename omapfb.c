@@ -127,6 +127,8 @@ buffer_alloc(GstBaseSink *bsink,
 	GST_BUFFER_SIZE(buffer) = size;
 	gst_buffer_set_caps(buffer, caps);
 
+	ioctl(self->overlay_fd, OMAPFB_WAITFORGO);
+
 	*buf = buffer;
 
 	return ret;
@@ -303,6 +305,7 @@ render(GstBaseSink *bsink,
 		self->overlay_info.yoffset = page->yoffset;
 		ioctl(self->overlay_fd, FBIOPAN_DISPLAY, &self->overlay_info);
 	} else {
+		ioctl(self->overlay_fd, OMAPFB_WAITFORGO);
 		memcpy(page->buf, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
 	}
 
