@@ -134,8 +134,8 @@ setcaps(GstBaseSink *bsink,
 		return FALSE;
 	}
 
-	self->overlay_info.xres = MIN(self->varinfo.xres, (unsigned) width) & ~15;
-	self->overlay_info.yres = MIN(self->varinfo.yres, (unsigned) height) & ~15;
+	self->overlay_info.xres = width;
+	self->overlay_info.yres = height;
 	self->overlay_info.xres_virtual = self->overlay_info.xres;
 	self->overlay_info.yres_virtual = self->overlay_info.yres;
 
