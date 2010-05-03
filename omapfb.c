@@ -325,7 +325,7 @@ plugin_init(GstPlugin *plugin)
 	omapfb_debug = _gst_debug_category_new("omapfb", 0, "omapfb");
 #endif
 
-	if (!gst_element_register(plugin, "omapfbsink", GST_RANK_NONE, GST_OMAPFB_SINK_TYPE))
+	if (!gst_element_register(plugin, "omapfbsink", GST_RANK_SECONDARY, GST_OMAPFB_SINK_TYPE))
 		return FALSE;
 
 	return TRUE;
