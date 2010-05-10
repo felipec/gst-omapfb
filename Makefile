@@ -18,7 +18,7 @@ all:
 version := $(shell ./get-version)
 
 libgstomapfb.so: omapfb.o log.o
-libgstomapfb.so: override CFLAGS += $(GST_CFLAGS) \
+libgstomapfb.so: override CFLAGS += $(GST_CFLAGS) -fPIC \
 	-D VERSION='"$(version)"' \
 	-I$(KERNEL)/include -I$(KERNEL)/arch/arm/include
 libgstomapfb.so: override LIBS += $(GST_LIBS)
