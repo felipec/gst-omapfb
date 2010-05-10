@@ -9,8 +9,6 @@ override CFLAGS += -D_GNU_SOURCE -DGST_DISABLE_DEPRECATED
 GST_CFLAGS := $(shell pkg-config --cflags gstreamer-0.10 gstreamer-base-0.10)
 GST_LIBS := $(shell pkg-config --libs gstreamer-0.10 gstreamer-base-0.10)
 
-KERNEL := /data/public/dev/omap/linux-omap
-
 all:
 
 version := $(shell ./get-version)
@@ -23,8 +21,7 @@ D = $(DESTDIR)
 
 libgstomapfb.so: omapfb.o log.o
 libgstomapfb.so: override CFLAGS += $(GST_CFLAGS) -fPIC \
-	-D VERSION='"$(version)"' \
-	-I$(KERNEL)/include -I$(KERNEL)/arch/arm/include
+	-D VERSION='"$(version)"' -I./include
 libgstomapfb.so: override LIBS += $(GST_LIBS)
 
 targets += libgstomapfb.so
