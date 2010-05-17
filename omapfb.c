@@ -254,10 +254,8 @@ render(GstBaseSink *bsink,
 	if (GST_BUFFER_DATA(buffer) == self->framebuffer)
 		return GST_FLOW_OK;
 
-	if (memcpy(self->framebuffer, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer)))
-		return GST_FLOW_OK;
-
-	return GST_FLOW_ERROR;
+	memcpy(self->framebuffer, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
+	return GST_FLOW_OK;
 }
 
 static void
