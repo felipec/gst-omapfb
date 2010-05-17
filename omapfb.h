@@ -26,6 +26,8 @@
 #include <linux/fb.h>
 #include <linux/omapfb.h>
 
+#include <stdbool.h>
+
 G_BEGIN_DECLS
 
 #define GST_OMAPFB_SINK_TYPE (gst_omapfbsink_get_type())
@@ -44,7 +46,7 @@ struct GstOmapFbSink {
 
 	int overlay_fd;
 	unsigned char *framebuffer;
-	gboolean enabled;
+	bool enabled;
 };
 
 struct GstOmapFbSinkClass {

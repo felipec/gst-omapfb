@@ -125,13 +125,13 @@ setcaps(GstBaseSink *bsink,
 
 	if (ioctl(self->overlay_fd, OMAPFB_SETUP_MEM, &self->mem_info)) {
 		pr_err(self, "could not setup memory info");
-		return FALSE;
+		return false;
 	}
 
 	self->framebuffer = mmap(NULL, self->mem_info.size, PROT_WRITE, MAP_SHARED, self->overlay_fd, 0);
 	if (self->framebuffer == MAP_FAILED) {
 		pr_err(self, "memory map failed");
-		return FALSE;
+		return false;
 	}
 
 	self->overlay_info.xres = width;
@@ -148,7 +148,7 @@ setcaps(GstBaseSink *bsink,
 
 	if (ioctl(self->overlay_fd, FBIOPUT_VSCREENINFO, &self->overlay_info)) {
 		pr_err(self, "could not get screen info");
-		return FALSE;
+		return false;
 	}
 
 	self->plane_info.enabled = 1;
@@ -162,12 +162,12 @@ setcaps(GstBaseSink *bsink,
 
 	if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
 		pr_err(self, "could not setup plane");
-		return FALSE;
+		return false;
 	}
 
-	self->enabled = TRUE;
+	self->enabled = true;
 
-	return TRUE;
+	return true;
 }
 
 static gboolean
@@ -182,45 +182,44 @@ start(GstBaseSink *bsink)
 
 	if (fd == -1) {
 		pr_err(self, "could not open framebuffer");
-		return FALSE;
+		return false;
 	}
 
 	if (ioctl(fd, FBIOGET_VSCREENINFO, &self->varinfo)) {
 		pr_err(self, "could not get screen info");
 		close(fd);
-		return FALSE;
+		return false;
 	}
 
 	if (close(fd)) {
 		pr_err(self, "could not close framebuffer");
-		return FALSE;
+		return false;
 	}
 
 	self->overlay_fd = open("/dev/fb1", O_RDWR);
 
 	if (self->overlay_fd == -1) {
 		pr_err(self, "could not open overlay");
-		return FALSE;
+		return false;
 	}
 
 	if (ioctl(self->overlay_fd, FBIOGET_VSCREENINFO, &self->overlay_info)) {
 		pr_err(self, "could not get overlay screen info");
-		return FALSE;
+		return false;
 	}
 
 	if (ioctl(self->overlay_fd, OMAPFB_QUERY_PLANE, &self->plane_info)) {
 		pr_err(self, "could not query plane info");
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 static gboolean
 stop(GstBaseSink *bsink)
 {
 	GstOmapFbSink *self;
-
 	self = GST_OMAPFB_SINK(bsink);
 
 	if (self->enabled) {
@@ -228,21 +227,21 @@ stop(GstBaseSink *bsink)
 
 		if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
 			pr_err(self, "could not disable plane");
-			return FALSE;
+			return false;
 		}
 	}
 
 	if (munmap(self->framebuffer, self->mem_info.size)) {
 		pr_err(self, "could not unmap");
-		return FALSE;
+		return false;
 	}
 
 	if (close(self->overlay_fd)) {
 		pr_err(self, "could not close overlay");
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 static GstFlowReturn
@@ -262,35 +261,33 @@ render(GstBaseSink *bsink,
 }
 
 static void
-type_class_init(gpointer g_class,
-		gpointer class_data)
+class_init(gpointer g_class,
+	   gpointer class_data)
 {
 	GstBaseSinkClass *base_sink_class;
 
-	base_sink_class = (GstBaseSinkClass *) g_class;
+	base_sink_class = g_class;
 
 	parent_class = g_type_class_ref(GST_OMAPFB_SINK_TYPE);
 
-	base_sink_class->set_caps = GST_DEBUG_FUNCPTR(setcaps);
-	base_sink_class->buffer_alloc = GST_DEBUG_FUNCPTR(buffer_alloc);
-	base_sink_class->start = GST_DEBUG_FUNCPTR(start);
-	base_sink_class->stop = GST_DEBUG_FUNCPTR(stop);
-	base_sink_class->render = GST_DEBUG_FUNCPTR(render);
+	base_sink_class->set_caps = setcaps;
+	base_sink_class->buffer_alloc = buffer_alloc;
+	base_sink_class->start = start;
+	base_sink_class->stop = stop;
+	base_sink_class->render = render;
 }
 
 static void
-type_base_init(gpointer g_class)
+base_init(gpointer g_class)
 {
-	GstElementClass *element_class = GST_ELEMENT_CLASS(g_class);
-	GstElementDetails details;
+	GstElementClass *element_class = g_class;
 	GstPadTemplate *template;
 
-	details.longname = "Linux OMAP framebuffer sink";
-	details.klass = "Sink/Video";
-	details.description = "Renders video with omapfb";
-	details.author = "Felipe Contreras";
-
-	gst_element_class_set_details(element_class, &details);
+	gst_element_class_set_details_simple(element_class,
+					      "Linux OMAP framebuffer sink",
+					      "Sink/Video",
+					      "Renders video with omapfb",
+					      "Felipe Contreras");
 
 	template = gst_pad_template_new("sink", GST_PAD_SINK,
 					GST_PAD_ALWAYS,
@@ -305,17 +302,14 @@ gst_omapfbsink_get_type(void)
 	static GType type;
 
 	if (G_UNLIKELY(type == 0)) {
-		GTypeInfo *type_info;
+		GTypeInfo type_info = {
+			.class_size = sizeof(GstOmapFbSinkClass),
+			.class_init = class_init,
+			.base_init = base_init,
+			.instance_size = sizeof(GstOmapFbSink),
+		};
 
-		type_info = g_new0(GTypeInfo, 1);
-		type_info->class_size = sizeof(GstOmapFbSinkClass);
-		type_info->base_init = type_base_init;
-		type_info->class_init = type_class_init;
-		type_info->instance_size = sizeof(GstOmapFbSink);
-
-		type = g_type_register_static(GST_TYPE_BASE_SINK, "GstOmapFbSink", type_info, 0);
-
-		g_free(type_info);
+		type = g_type_register_static(GST_TYPE_BASE_SINK, "GstOmapFbSink", &type_info, 0);
 	}
 
 	return type;
@@ -329,9 +323,9 @@ plugin_init(GstPlugin *plugin)
 #endif
 
 	if (!gst_element_register(plugin, "omapfbsink", GST_RANK_SECONDARY, GST_OMAPFB_SINK_TYPE))
-		return FALSE;
+		return false;
 
-	return TRUE;
+	return true;
 }
 
 GstPluginDesc gst_plugin_desc = {
