@@ -47,6 +47,7 @@ struct GstOmapFbSink {
 	int overlay_fd;
 	unsigned char *framebuffer;
 	bool enabled;
+	bool manual_update;
 };
 
 struct GstOmapFbSinkClass {

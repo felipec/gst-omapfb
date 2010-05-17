@@ -77,6 +77,29 @@ generate_sink_template(void)
 	return caps;
 }
 
+static void
+update(GstOmapFbSink *self)
+{
+	struct omapfb_update_window update_window;
+	unsigned x, y, w, h;
+
+	x = y = 0;
+	w = self->varinfo.xres;
+	h = self->varinfo.yres;
+
+	update_window.x = x;
+	update_window.y = y;
+	update_window.width = w;
+	update_window.height = h;
+	update_window.format = 0;
+	update_window.out_x = 0;
+	update_window.out_y = 0;
+	update_window.out_width = w;
+	update_window.out_height = h;
+
+	ioctl(self->overlay_fd, OMAPFB_UPDATE_WINDOW, &update_window);
+}
+
 static GstFlowReturn
 buffer_alloc(GstBaseSink *bsink,
 	     guint64 offset,
@@ -112,6 +135,7 @@ setcaps(GstBaseSink *bsink,
 	GstOmapFbSink *self;
 	GstStructure *structure;
 	int width, height;
+	int update_mode;
 
 	self = GST_OMAPFB_SINK(bsink);
 
@@ -166,6 +190,10 @@ setcaps(GstBaseSink *bsink,
 	}
 
 	self->enabled = true;
+
+	update_mode = OMAPFB_MANUAL_UPDATE;
+	ioctl(self->overlay_fd, OMAPFB_SET_UPDATE_MODE, &update_mode);
+	self->manual_update = (update_mode == OMAPFB_MANUAL_UPDATE);
 
 	return true;
 }
@@ -255,6 +283,10 @@ render(GstBaseSink *bsink,
 		return GST_FLOW_OK;
 
 	memcpy(self->framebuffer, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
+
+	if (self->manual_update)
+		update(self);
+
 	return GST_FLOW_OK;
 }
 
