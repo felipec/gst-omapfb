@@ -136,6 +136,7 @@ setcaps(GstBaseSink *bsink,
 	GstStructure *structure;
 	int width, height;
 	int update_mode;
+	struct omapfb_color_key color_key;
 
 	self = GST_OMAPFB_SINK(bsink);
 
@@ -174,6 +175,10 @@ setcaps(GstBaseSink *bsink,
 		pr_err(self, "could not get screen info");
 		return false;
 	}
+
+	color_key.key_type = OMAPFB_COLOR_KEY_DISABLED;
+	if (ioctl(self->overlay_fd, OMAPFB_SET_COLOR_KEY, &color_key))
+		pr_err(self, "could not disable color key");
 
 	self->plane_info.enabled = 1;
 	self->plane_info.pos_x = 0;
