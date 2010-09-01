@@ -145,6 +145,12 @@ setcaps(GstBaseSink *bsink,
 	gst_structure_get_int(structure, "width", &width);
 	gst_structure_get_int(structure, "height", &height);
 
+	self->plane_info.enabled = 0;
+	if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
+		pr_err(self, "could not disable plane");
+		return false;
+	}
+
 	self->mem_info.type = OMAPFB_MEMTYPE_SDRAM;
 	self->mem_info.size = GST_ROUND_UP_2(width) * height * 2;
 
