@@ -108,6 +108,7 @@ struct page *get_page(GstOmapFbSink *self)
 		if (&self->pages[i] == self->cur_page)
 			continue;
 		page = &self->pages[i];
+		ioctl(self->overlay_fd, OMAPFB_WAITFORVSYNC);
 		break;
 	}
 	return page;
