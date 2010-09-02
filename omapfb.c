@@ -107,16 +107,11 @@ buffer_alloc(GstBaseSink *bsink,
 	     GstCaps *caps,
 	     GstBuffer **buf)
 {
-	GstOmapFbSink *self;
+	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
 	GstBuffer *buffer;
-	GstFlowReturn ret = GST_FLOW_OK;
 
-	self = GST_OMAPFB_SINK(bsink);
-
-	if (!self->enabled) {
-		*buf = NULL;
-		return GST_FLOW_OK;
-	}
+	if (!self->enabled)
+		goto missing;
 
 	buffer = gst_buffer_new();
 	GST_BUFFER_DATA(buffer) = self->framebuffer;
@@ -125,22 +120,23 @@ buffer_alloc(GstBaseSink *bsink,
 
 	*buf = buffer;
 
-	return ret;
+	return GST_FLOW_OK;
+missing:
+	*buf = NULL;
+	return GST_FLOW_OK;
 }
 
 static gboolean
 setcaps(GstBaseSink *bsink,
-	GstCaps *vscapslist)
+	GstCaps *caps)
 {
-	GstOmapFbSink *self;
+	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
 	GstStructure *structure;
 	int width, height;
 	int update_mode;
 	struct omapfb_color_key color_key;
 
-	self = GST_OMAPFB_SINK(bsink);
-
-	structure = gst_caps_get_structure(vscapslist, 0);
+	structure = gst_caps_get_structure(caps, 0);
 
 	gst_structure_get_int(structure, "width", &width);
 	gst_structure_get_int(structure, "height", &height);
@@ -212,10 +208,8 @@ setcaps(GstBaseSink *bsink,
 static gboolean
 start(GstBaseSink *bsink)
 {
-	GstOmapFbSink *self;
+	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
 	int fd;
-
-	self = GST_OMAPFB_SINK(bsink);
 
 	fd = open("/dev/fb0", O_RDWR);
 
@@ -258,8 +252,7 @@ start(GstBaseSink *bsink)
 static gboolean
 stop(GstBaseSink *bsink)
 {
-	GstOmapFbSink *self;
-	self = GST_OMAPFB_SINK(bsink);
+	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
 
 	if (self->enabled) {
 		self->plane_info.enabled = 0;
@@ -287,8 +280,7 @@ static GstFlowReturn
 render(GstBaseSink *bsink,
        GstBuffer *buffer)
 {
-	GstOmapFbSink *self;
-	self = GST_OMAPFB_SINK(bsink);
+	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
 
 	if (GST_BUFFER_DATA(buffer) == self->framebuffer)
 		return GST_FLOW_OK;
