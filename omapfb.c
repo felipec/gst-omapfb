@@ -66,10 +66,10 @@ generate_sink_template(void)
 	caps = gst_caps_new_empty();
 
 	struc = gst_structure_new("video/x-raw-yuv",
-				  "width", GST_TYPE_INT_RANGE, 16, 4096,
-				  "height", GST_TYPE_INT_RANGE, 16, 4096,
-				  "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30, 1,
-				  NULL);
+			"width", GST_TYPE_INT_RANGE, 16, 4096,
+			"height", GST_TYPE_INT_RANGE, 16, 4096,
+			"framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30, 1,
+			NULL);
 
 	{
 		GValue list;
@@ -143,13 +143,9 @@ struct page *get_page(struct gst_omapfb_sink *self)
 }
 
 static GstFlowReturn
-buffer_alloc(GstBaseSink *bsink,
-	     guint64 offset,
-	     guint size,
-	     GstCaps *caps,
-	     GstBuffer **buf)
+buffer_alloc(GstBaseSink *base, guint64 offset, guint size, GstCaps *caps, GstBuffer **buf)
 {
-	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
 	GstBuffer *buffer;
 	struct page *page;
 
@@ -174,10 +170,9 @@ missing:
 }
 
 static gboolean
-setcaps(GstBaseSink *bsink,
-	GstCaps *caps)
+setcaps(GstBaseSink *base, GstCaps *caps)
 {
-	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
 	GstStructure *structure;
 	int width, height;
 	int update_mode;
@@ -221,7 +216,7 @@ setcaps(GstBaseSink *bsink,
 	self->overlay_info.nonstd = OMAPFB_COLOR_YUV422;
 
 	pr_info(self, "vscreen info: width=%u, height=%u",
-		self->overlay_info.xres, self->overlay_info.yres);
+			self->overlay_info.xres, self->overlay_info.yres);
 
 	if (ioctl(self->overlay_fd, FBIOPUT_VSCREENINFO, &self->overlay_info)) {
 		pr_err(self, "could not get screen info");
@@ -239,7 +234,7 @@ setcaps(GstBaseSink *bsink,
 	self->plane_info.out_height = self->varinfo.yres;
 
 	pr_info(self, "plane info: width=%u, height=%u",
-		self->varinfo.xres, self->varinfo.yres);
+			self->varinfo.xres, self->varinfo.yres);
 
 	if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
 		pr_err(self, "could not setup plane");
@@ -264,9 +259,9 @@ setcaps(GstBaseSink *bsink,
 }
 
 static gboolean
-start(GstBaseSink *bsink)
+start(GstBaseSink *base)
 {
-	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
 	int fd;
 
 	self->nr_pages = 2;
@@ -311,9 +306,9 @@ start(GstBaseSink *bsink)
 }
 
 static gboolean
-stop(GstBaseSink *bsink)
+stop(GstBaseSink *base)
 {
-	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
 
 	if (self->enabled) {
 		self->plane_info.enabled = 0;
@@ -338,10 +333,9 @@ stop(GstBaseSink *bsink)
 }
 
 static GstFlowReturn
-render(GstBaseSink *bsink,
-       GstBuffer *buffer)
+render(GstBaseSink *base, GstBuffer *buffer)
 {
-	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
 	struct page *page = NULL;
 	int i;
 
@@ -372,8 +366,7 @@ render(GstBaseSink *bsink,
 }
 
 static void
-class_init(gpointer g_class,
-	   gpointer class_data)
+class_init(void *g_class, void *class_data)
 {
 	GstBaseSinkClass *base_sink_class;
 
@@ -390,20 +383,20 @@ class_init(gpointer g_class,
 }
 
 static void
-base_init(gpointer g_class)
+base_init(void *g_class)
 {
 	GstElementClass *element_class = g_class;
 	GstPadTemplate *template;
 
 	gst_element_class_set_details_simple(element_class,
-					      "Linux OMAP framebuffer sink",
-					      "Sink/Video",
-					      "Renders video with omapfb",
-					      "Felipe Contreras");
+			"Linux OMAP framebuffer sink",
+			"Sink/Video",
+			"Renders video with omapfb",
+			"Felipe Contreras");
 
 	template = gst_pad_template_new("sink", GST_PAD_SINK,
-					GST_PAD_ALWAYS,
-					generate_sink_template());
+			GST_PAD_ALWAYS,
+			generate_sink_template());
 
 	gst_element_class_add_pad_template(element_class, template);
 }
