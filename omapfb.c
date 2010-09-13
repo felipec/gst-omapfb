@@ -35,6 +35,7 @@ GstDebugCategory *omapfb_debug;
 struct page {
 	unsigned yoffset;
 	void *buf;
+	bool used;
 };
 
 struct gst_omapfb_sink {
@@ -137,9 +138,12 @@ struct page *get_page(struct gst_omapfb_sink *self)
 	for (i = 0; i < self->nr_pages; i++) {
 		if (&self->pages[i] == self->cur_page)
 			continue;
-		page = &self->pages[i];
-		ioctl(self->overlay_fd, OMAPFB_WAITFORVSYNC);
-		break;
+		if (!self->pages[i].used) {
+			page = &self->pages[i];
+			page->used = true;
+			ioctl(self->overlay_fd, OMAPFB_WAITFORVSYNC);
+			break;
+		}
 	}
 	return page;
 }
@@ -381,6 +385,7 @@ render(GstBaseSink *base, GstBuffer *buffer)
 		update(self);
 
 	self->cur_page = page;
+	page->used = false;
 
 	return GST_FLOW_OK;
 }
