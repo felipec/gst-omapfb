@@ -17,7 +17,7 @@
 #include "omapfb.h"
 #include "log.h"
 
-static GstVideoSinkClass *parent_class;
+static void *parent_class;
 
 GstDebugCategory *omapfb_debug;
 

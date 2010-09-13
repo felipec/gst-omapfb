@@ -12,8 +12,7 @@
 #define GST_OMAPFB_H
 
 #include <gst/gst.h>
-#include <gst/video/gstvideosink.h>
-#include <gst/video/video.h>
+#include <gst/base/gstbasesink.h>
 
 #include <linux/fb.h>
 #include <linux/omapfb.h>
@@ -28,7 +27,7 @@ struct page {
 };
 
 struct gst_omapfb_sink {
-	GstVideoSink videosink;
+	GstBaseSink parent;
 
 	struct fb_var_screeninfo varinfo;
 	struct fb_var_screeninfo overlay_info;
