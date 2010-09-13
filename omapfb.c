@@ -70,7 +70,7 @@ generate_sink_template(void)
 }
 
 static void
-update(GstOmapFbSink *self)
+update(struct gst_omapfb_sink *self)
 {
 	struct omapfb_update_window update_window;
 	unsigned x, y, w, h;
@@ -92,7 +92,7 @@ update(GstOmapFbSink *self)
 	ioctl(self->overlay_fd, OMAPFB_UPDATE_WINDOW, &update_window);
 }
 
-struct page *get_page(GstOmapFbSink *self)
+struct page *get_page(struct gst_omapfb_sink *self)
 {
 	struct page *page = NULL;
 	int i;
@@ -113,7 +113,7 @@ buffer_alloc(GstBaseSink *bsink,
 	     GstCaps *caps,
 	     GstBuffer **buf)
 {
-	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
 	GstBuffer *buffer;
 	struct page *page;
 
@@ -141,7 +141,7 @@ static gboolean
 setcaps(GstBaseSink *bsink,
 	GstCaps *caps)
 {
-	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
 	GstStructure *structure;
 	int width, height;
 	int update_mode;
@@ -230,7 +230,7 @@ setcaps(GstBaseSink *bsink,
 static gboolean
 start(GstBaseSink *bsink)
 {
-	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
 	int fd;
 
 	self->nr_pages = 2;
@@ -277,7 +277,7 @@ start(GstBaseSink *bsink)
 static gboolean
 stop(GstBaseSink *bsink)
 {
-	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
 
 	if (self->enabled) {
 		self->plane_info.enabled = 0;
@@ -305,7 +305,7 @@ static GstFlowReturn
 render(GstBaseSink *bsink,
        GstBuffer *buffer)
 {
-	GstOmapFbSink *self = GST_OMAPFB_SINK(bsink);
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)bsink;
 	struct page *page = NULL;
 	int i;
 
@@ -372,16 +372,16 @@ base_init(gpointer g_class)
 }
 
 GType
-gst_omapfbsink_get_type(void)
+gst_omapfb_sink_get_type(void)
 {
 	static GType type;
 
 	if (G_UNLIKELY(type == 0)) {
 		GTypeInfo type_info = {
-			.class_size = sizeof(GstOmapFbSinkClass),
+			.class_size = sizeof(struct gst_omapfb_sink_class),
 			.class_init = class_init,
 			.base_init = base_init,
-			.instance_size = sizeof(GstOmapFbSink),
+			.instance_size = sizeof(struct gst_omapfb_sink),
 		};
 
 		type = g_type_register_static(GST_TYPE_BASE_SINK, "GstOmapFbSink", &type_info, 0);

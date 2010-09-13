@@ -20,20 +20,14 @@
 
 #include <stdbool.h>
 
-G_BEGIN_DECLS
-
-#define GST_OMAPFB_SINK_TYPE (gst_omapfbsink_get_type())
-#define GST_OMAPFB_SINK(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_OMAPFB_SINK_TYPE, GstOmapFbSink))
-
-typedef struct GstOmapFbSink GstOmapFbSink;
-typedef struct GstOmapFbSinkClass GstOmapFbSinkClass;
+#define GST_OMAPFB_SINK_TYPE (gst_omapfb_sink_get_type())
 
 struct page {
 	unsigned yoffset;
 	void *buf;
 };
 
-struct GstOmapFbSink {
+struct gst_omapfb_sink {
 	GstVideoSink videosink;
 
 	struct fb_var_screeninfo varinfo;
@@ -51,12 +45,10 @@ struct GstOmapFbSink {
 	struct page *cur_page;
 };
 
-struct GstOmapFbSinkClass {
+struct gst_omapfb_sink_class {
 	GstBaseSinkClass parent_class;
 };
 
-GType gst_omapfbsink_get_type(void);
-
-G_END_DECLS
+GType gst_omapfb_sink_get_type(void);
 
 #endif /* GST_OMAPFB_H */
