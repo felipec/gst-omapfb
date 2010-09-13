@@ -24,6 +24,8 @@
 #include "omapfb.h"
 #include "log.h"
 
+#define ROUND_UP(num, scale) (((num) + ((scale) - 1)) & ~((scale) - 1))
+
 static void *parent_class;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -178,11 +180,15 @@ setcaps(GstBaseSink *base, GstCaps *caps)
 	int update_mode;
 	struct omapfb_color_key color_key;
 	size_t framesize;
+	int par_n, par_d;
+	unsigned out_width, out_height;
 
 	structure = gst_caps_get_structure(caps, 0);
 
 	gst_structure_get_int(structure, "width", &width);
 	gst_structure_get_int(structure, "height", &height);
+	if (!gst_structure_get_fraction(structure, "pixel-aspect-ratio", &par_n, &par_d))
+		par_n = par_d = 1;
 
 	self->plane_info.enabled = 0;
 	if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
@@ -227,13 +233,27 @@ setcaps(GstBaseSink *base, GstCaps *caps)
 	if (ioctl(self->overlay_fd, OMAPFB_SET_COLOR_KEY, &color_key))
 		pr_err(self, "could not disable color key");
 
-	self->plane_info.enabled = 1;
-	self->plane_info.pos_x = 0;
-	self->plane_info.pos_y = 0;
-	self->plane_info.out_width = self->varinfo.xres;
-	self->plane_info.out_height = self->varinfo.yres;
+	/* scale to width */
+	out_width = self->varinfo.xres;
+	out_height = (height * par_d * self->varinfo.xres + width * par_n / 2) / (width * par_n);
+	if (out_height > self->varinfo.yres) {
+		/* scale to height */
+		out_height = self->varinfo.yres;
+		out_width = (width * par_n * self->varinfo.yres + height * par_d / 2) / (height * par_d);
+	}
+	out_width = ROUND_UP(out_width, 2);
+	out_height = ROUND_UP(out_height, 2);
 
-	pr_info(self, "plane info: width=%u, height=%u",
+	self->plane_info.enabled = 1;
+	self->plane_info.pos_x = (self->varinfo.xres - out_width) / 2;
+	self->plane_info.pos_y = (self->varinfo.yres - out_height) / 2;
+	self->plane_info.out_width = out_width;
+	self->plane_info.out_height = out_height;
+
+	pr_info(self, "output info: %dx%d, offset: %d,%d",
+			out_width, out_height,
+			self->plane_info.pos_x, self->plane_info.pos_y);
+	pr_info(self, "plane info: %ux%u",
 			self->varinfo.xres, self->varinfo.yres);
 
 	if (ioctl(self->overlay_fd, OMAPFB_SETUP_PLANE, &self->plane_info)) {
