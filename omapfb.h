@@ -8,46 +8,13 @@
  * packaging of this file.
  */
 
-#ifndef GST_OMAPFB_H
-#define GST_OMAPFB_H
+#ifndef OMAPFB_H
+#define OMAPFB_H
 
-#include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
-
-#include <linux/fb.h>
-#include <linux/omapfb.h>
-
-#include <stdbool.h>
+#include <glib-object.h>
 
 #define GST_OMAPFB_SINK_TYPE (gst_omapfb_sink_get_type())
 
-struct page {
-	unsigned yoffset;
-	void *buf;
-};
-
-struct gst_omapfb_sink {
-	GstBaseSink parent;
-
-	struct fb_var_screeninfo varinfo;
-	struct fb_var_screeninfo overlay_info;
-	struct omapfb_mem_info mem_info;
-	struct omapfb_plane_info plane_info;
-
-	int overlay_fd;
-	unsigned char *framebuffer;
-	bool enabled;
-	bool manual_update;
-
-	struct page *pages;
-	int nr_pages;
-	struct page *cur_page;
-};
-
-struct gst_omapfb_sink_class {
-	GstBaseSinkClass parent_class;
-};
-
 GType gst_omapfb_sink_get_type(void);
 
-#endif /* GST_OMAPFB_H */
+#endif /* OMAPFB_H */

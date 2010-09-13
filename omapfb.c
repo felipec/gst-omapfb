@@ -13,6 +13,13 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
+
+#include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
+
+#include <linux/fb.h>
+#include <linux/omapfb.h>
 
 #include "omapfb.h"
 #include "log.h"
@@ -22,6 +29,33 @@ static void *parent_class;
 #ifndef GST_DISABLE_GST_DEBUG
 GstDebugCategory *omapfb_debug;
 #endif
+
+struct page {
+	unsigned yoffset;
+	void *buf;
+};
+
+struct gst_omapfb_sink {
+	GstBaseSink parent;
+
+	struct fb_var_screeninfo varinfo;
+	struct fb_var_screeninfo overlay_info;
+	struct omapfb_mem_info mem_info;
+	struct omapfb_plane_info plane_info;
+
+	int overlay_fd;
+	unsigned char *framebuffer;
+	bool enabled;
+	bool manual_update;
+
+	struct page *pages;
+	int nr_pages;
+	struct page *cur_page;
+};
+
+struct gst_omapfb_sink_class {
+	GstBaseSinkClass parent_class;
+};
 
 static GstCaps *
 generate_sink_template(void)
