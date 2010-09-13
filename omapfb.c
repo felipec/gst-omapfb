@@ -19,7 +19,9 @@
 
 static void *parent_class;
 
+#ifndef GST_DISABLE_GST_DEBUG
 GstDebugCategory *omapfb_debug;
+#endif
 
 static GstCaps *
 generate_sink_template(void)
