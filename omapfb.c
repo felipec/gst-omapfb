@@ -288,7 +288,7 @@ start(GstBaseSink *base)
 	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
 	int fd;
 
-	self->nr_pages = 2;
+	self->nr_pages = 3;
 	self->cur_page = NULL;
 
 	fd = open("/dev/fb0", O_RDWR);
