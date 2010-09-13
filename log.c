@@ -27,28 +27,8 @@
 
 #include <gst/gst.h>
 
-#define SYSLOG
-
-#ifdef SYSLOG
-#include <syslog.h>
-#endif
-
 #ifndef GST_DISABLE_GST_DEBUG
 extern GstDebugCategory *omapfb_debug;
-#endif
-
-#ifdef SYSLOG
-static inline int
-log_level_to_syslog(unsigned int level)
-{
-	switch (level) {
-	case 0: return LOG_ERR;
-	case 1: return LOG_WARNING;
-	case 2:
-	case 3: return LOG_INFO;
-	default: return LOG_DEBUG;
-	}
-}
 #endif
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -81,15 +61,8 @@ pr_helper(unsigned int level,
 
 	vasprintf(&tmp, fmt, args);
 
-	if (level <= 1) {
-#ifdef SYSLOG
-		if (object && GST_IS_OBJECT(object) && GST_OBJECT_NAME(object))
-			syslog(log_level_to_syslog(level), "%s: %s", GST_OBJECT_NAME(object), tmp);
-		else
-			syslog(log_level_to_syslog(level), "%s", tmp);
-#endif
+	if (level <= 1)
 		g_print("%s: %s\n", function, tmp);
-	}
 	else if (level == 2)
 		g_print("%s:%s(%u): %s\n", file, function, line, tmp);
 #ifdef DEVEL
