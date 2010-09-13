@@ -45,14 +45,13 @@ log_level_to_gst(unsigned int level)
 }
 #endif
 
-void
-pr_helper(unsigned int level,
-	  void *object,
-	  const char *file,
-	  const char *function,
-	  unsigned int line,
-	  const char *fmt,
-	  ...)
+void pr_helper(unsigned int level,
+		void *object,
+		const char *file,
+		const char *function,
+		unsigned int line,
+		const char *fmt,
+		...)
 {
 	char *tmp;
 	va_list args;
@@ -62,10 +61,10 @@ pr_helper(unsigned int level,
 	vasprintf(&tmp, fmt, args);
 
 	if (level <= 1)
-		g_print("%s: %s\n", function, tmp);
+		g_printerr("%s: %s\n", function, tmp);
 	else if (level == 2)
 		g_print("%s:%s(%u): %s\n", file, function, line, tmp);
-#ifdef DEVEL
+#if defined(DEVEL) || defined(DEBUG)
 	else if (level == 3)
 		g_print("%s: %s\n", function, tmp);
 #endif
