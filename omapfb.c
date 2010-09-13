@@ -386,6 +386,7 @@ class_init(gpointer g_class,
 	base_sink_class->start = start;
 	base_sink_class->stop = stop;
 	base_sink_class->render = render;
+	base_sink_class->preroll = render;
 }
 
 static void
