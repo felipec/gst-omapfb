@@ -131,7 +131,7 @@ update(struct gst_omapfb_sink *self)
 	ioctl(self->overlay_fd, OMAPFB_UPDATE_WINDOW, &update_window);
 }
 
-struct page *get_page(struct gst_omapfb_sink *self)
+static struct page *get_page(struct gst_omapfb_sink *self)
 {
 	struct page *page = NULL;
 	int i;
