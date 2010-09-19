@@ -154,40 +154,9 @@ static struct page *get_page(struct gst_omapfb_sink *self)
 	return page;
 }
 
-static GstFlowReturn
-buffer_alloc(GstBaseSink *base, guint64 offset, guint size, GstCaps *caps, GstBuffer **buf)
-{
-	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
-	GstBuffer *buffer;
-	struct page *page;
-
-	if (!self->enabled)
-		goto missing;
-
-	page = get_page(self);
-	if (!page)
-		goto missing;
-
-	buffer = gst_buffer_new();
-	GST_BUFFER_DATA(buffer) = page->buf;
-	GST_BUFFER_SIZE(buffer) = size;
-	gst_buffer_set_caps(buffer, caps);
-
-	*buf = buffer;
-
-	if (page == self->old_page)
-		ioctl(self->overlay_fd, OMAPFB_WAITFORVSYNC);
-
-	return GST_FLOW_OK;
-missing:
-	*buf = NULL;
-	return GST_FLOW_OK;
-}
-
 static gboolean
-setcaps(GstBaseSink *base, GstCaps *caps)
+setup(struct gst_omapfb_sink *self, GstCaps *caps)
 {
-	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
 	GstStructure *structure;
 	int width, height;
 	int update_mode;
@@ -289,6 +258,45 @@ setcaps(GstBaseSink *base, GstCaps *caps)
 	}
 
 	return true;
+}
+
+static GstFlowReturn
+buffer_alloc(GstBaseSink *base, guint64 offset, guint size, GstCaps *caps, GstBuffer **buf)
+{
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
+	GstBuffer *buffer;
+	struct page *page;
+
+	if (!self->enabled)
+		goto missing;
+
+	page = get_page(self);
+	if (!page)
+		goto missing;
+
+	buffer = gst_buffer_new();
+	GST_BUFFER_DATA(buffer) = page->buf;
+	GST_BUFFER_SIZE(buffer) = size;
+	gst_buffer_set_caps(buffer, caps);
+
+	*buf = buffer;
+
+	if (page == self->old_page)
+		ioctl(self->overlay_fd, OMAPFB_WAITFORVSYNC);
+
+	return GST_FLOW_OK;
+missing:
+	*buf = NULL;
+	return GST_FLOW_OK;
+}
+
+static gboolean
+setcaps(GstBaseSink *base, GstCaps *caps)
+{
+	struct gst_omapfb_sink *self = (struct gst_omapfb_sink *)base;
+	if (self->enabled)
+		return true;
+	return setup(self, caps);
 }
 
 static gboolean
