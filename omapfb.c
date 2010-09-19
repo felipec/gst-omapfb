@@ -54,6 +54,7 @@ struct gst_omapfb_sink {
 	struct page *pages;
 	int nr_pages;
 	struct page *cur_page;
+	struct page *old_page;
 };
 
 struct gst_omapfb_sink_class {
@@ -138,13 +139,18 @@ static struct page *get_page(struct gst_omapfb_sink *self)
 	for (i = 0; i < self->nr_pages; i++) {
 		if (&self->pages[i] == self->cur_page)
 			continue;
+		if (&self->pages[i] == self->old_page)
+			continue;
 		if (!self->pages[i].used) {
 			page = &self->pages[i];
-			page->used = true;
-			ioctl(self->overlay_fd, OMAPFB_WAITFORVSYNC);
 			break;
 		}
 	}
+	/* old page needs a vsync */
+	if (!page && self->old_page && !self->old_page->used)
+		page = self->old_page;
+	if (page)
+		page->used = true;
 	return page;
 }
 
@@ -168,6 +174,9 @@ buffer_alloc(GstBaseSink *base, guint64 offset, guint size, GstCaps *caps, GstBu
 	gst_buffer_set_caps(buffer, caps);
 
 	*buf = buffer;
+
+	if (page == self->old_page)
+		ioctl(self->overlay_fd, OMAPFB_WAITFORVSYNC);
 
 	return GST_FLOW_OK;
 missing:
@@ -289,7 +298,7 @@ start(GstBaseSink *base)
 	int fd;
 
 	self->nr_pages = 3;
-	self->cur_page = NULL;
+	self->cur_page = self->old_page = NULL;
 
 	fd = open("/dev/fb0", O_RDWR);
 
@@ -384,6 +393,7 @@ render(GstBaseSink *base, GstBuffer *buffer)
 	if (self->manual_update)
 		update(self);
 
+	self->old_page = self->cur_page;
 	self->cur_page = page;
 	page->used = false;
 
