@@ -256,6 +256,7 @@ setup(struct gst_omapfb_sink *self, GstCaps *caps)
 		self->pages[i].yoffset = i * self->overlay_info.yres;
 		self->pages[i].buf = self->framebuffer + (i * framesize);
 	}
+	self->cur_page = &self->pages[0];
 
 	return true;
 }
