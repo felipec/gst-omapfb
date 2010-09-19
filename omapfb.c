@@ -267,7 +267,7 @@ buffer_alloc(GstBaseSink *base, guint64 offset, guint size, GstCaps *caps, GstBu
 	GstBuffer *buffer;
 	struct page *page;
 
-	if (!self->enabled)
+	if (!self->enabled && !setup(self, caps))
 		goto missing;
 
 	page = get_page(self);
