@@ -207,7 +207,7 @@ setup(struct gst_omapfb_sink *self, GstCaps *caps)
 			self->overlay_info.xres, self->overlay_info.yres);
 
 	if (ioctl(self->overlay_fd, FBIOPUT_VSCREENINFO, &self->overlay_info)) {
-		pr_err(self, "could not get screen info");
+		pr_err(self, "could not set screen info");
 		return false;
 	}
 
